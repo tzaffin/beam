@@ -340,16 +340,22 @@ class BeamMobsim @Inject()(
     beamServices.startNewIteration
     eventsManager.initProcessing()
     val cluster = Cluster(actorSystem)
-    val iteration = actorSystem.actorOf(Props(new MasterActor))
     if (cluster.selfRoles.contains("base")) {
-      cluster.registerOnMemberUp {
+      val iteration = actorSystem.actorOf(Props(new MasterActor))
+      /*cluster.registerOnMemberUp {
         Await.result(iteration ? "Run!", timeout.duration)
         logger.info("Agentsim finished.")
         eventsManager.finishProcessing()
         logger.info("Events drained.")
-      }
+      }*/
+      Await.result(iteration ? "Run!", timeout.duration)
+      logger.info("Agentsim finished.")
+      eventsManager.finishProcessing()
+      logger.info("Events drained.")
     } else {
+      actorSystem.actorOf(Props(new WorkerActor))
       logger.info("Waiting for tasks...")
+      Await.result(actorSystem.whenTerminated, timeout.duration)
     }
   }
 }

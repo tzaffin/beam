@@ -117,7 +117,7 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
           EmbodiedBeamTrip(
             Vector(
               EmbodiedBeamLeg(leg.copy(duration = duration.toLong),
-                              vehicleId,
+                              vehicleId.toString,
                               true,
                               None,
                               BigDecimal.valueOf(0),
@@ -473,12 +473,13 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
           for ((beamLeg, index) <- tripWithFares.trip.legs.zipWithIndex) yield {
             val cost = tripWithFares.legFares.getOrElse(index, 0.0) // FIXME this value is never used.
             if (Modes.isR5TransitMode(beamLeg.mode)) {
-              EmbodiedBeamLeg(beamLeg,
-                              beamLeg.travelPath.transitStops.get.vehicleId,
-                              false,
-                              None,
-                              cost,
-                              false)
+              EmbodiedBeamLeg(
+                beamLeg,
+                beamLeg.travelPath.transitStops.get.vehicleId.toString,
+                false,
+                None,
+                cost,
+                false)
             } else {
               val unbecomeDriverAtComplete = Modes
                 .isR5LegMode(beamLeg.mode) && (beamLeg.mode != WALK || beamLeg == tripWithFares.trip.legs.last)
@@ -486,14 +487,14 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
                 val body =
                   routingRequest.streetVehicles.find(_.mode == WALK).get
                 EmbodiedBeamLeg(beamLeg,
-                                body.id,
+                                body.id.toString,
                                 body.asDriver,
                                 None,
                                 0.0,
                                 unbecomeDriverAtComplete)
               } else {
                 EmbodiedBeamLeg(beamLeg,
-                                vehicle.id,
+                                vehicle.id.toString,
                                 vehicle.asDriver,
                                 None,
                                 cost,
@@ -539,7 +540,7 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
                   beelineDistanceInMeters
                 )
               ),
-              maybeBody.get.id,
+              maybeBody.get.id.toString,
               maybeBody.get.asDriver,
               None,
               0,
