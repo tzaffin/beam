@@ -438,7 +438,7 @@ class PersonAgent(val scheduler: ActorRef,
     case Event(
         StateTimeout,
         BasePersonData(_, _, nextLeg :: tailOfCurrentTrip, _, _, _, _, _, _))
-        if nextLeg.beamLeg.mode.isTransit() =>
+        if BeamMode.withValue(nextLeg.beamLeg.mode).isTransit() =>
       val legSegment = nextLeg :: tailOfCurrentTrip.takeWhile(leg =>
         leg.beamVehicleId == nextLeg.beamVehicleId)
       val resRequest = new ReservationRequest(

@@ -267,7 +267,6 @@ class BeamMobsim @Inject()(
   }
 
   private class WorkerActor extends Actor with ActorLogging {
-    var runSender: ActorRef = _
     private val errorListener = context.actorOf(ErrorListener.props())
     context.watch(errorListener)
 
@@ -325,7 +324,6 @@ class BeamMobsim @Inject()(
       case Terminated(_) =>
         if (context.children.isEmpty) {
           context.stop(self)
-          runSender ! Success("Ran.")
         } else {
           log.debug(s"Remaining: ${context.children}")
         }

@@ -13,7 +13,7 @@ class RoutingModelSpec extends FlatSpec with Matchers {
     def travelTime(enterTime: Long, linkId: Int) = 1000
     val leg = EmbodiedBeamLeg(
       BeamLeg(0,
-              BeamMode.CAR,
+              BeamMode.CAR.value,
               0,
               BeamPath(Vector(1, 2, 3, 4, 5),
                        None,
@@ -47,7 +47,7 @@ class RoutingModelSpec extends FlatSpec with Matchers {
       if (enterTime < 2000) 1000 else 2000
     val leg = EmbodiedBeamLeg(
       BeamLeg(0,
-              BeamMode.CAR,
+              BeamMode.CAR.value,
               0,
               BeamPath(Vector(1, 2, 3, 4, 5),
                        None,
@@ -81,7 +81,7 @@ class RoutingModelSpec extends FlatSpec with Matchers {
     val leg = EmbodiedBeamLeg(
       BeamLeg(
         0,
-        BeamMode.CAR,
+        BeamMode.CAR.value,
         0,
         BeamPath(Vector(1, 2), None, SpaceTime.zero, SpaceTime.zero, 10.0)),
       Id.createVehicleId(13).toString,
@@ -104,7 +104,7 @@ class RoutingModelSpec extends FlatSpec with Matchers {
     def travelTime(enterTime: Long, linkId: Int) = 1000
     val leg = EmbodiedBeamLeg(
       BeamLeg(0,
-              BeamMode.CAR,
+              BeamMode.CAR.value,
               0,
               BeamPath(Vector(1), None, SpaceTime.zero, SpaceTime.zero, 10.0)),
       Id.createVehicleId(13).toString,
@@ -124,7 +124,7 @@ class RoutingModelSpec extends FlatSpec with Matchers {
     def travelTime(enterTime: Long, linkId: Int) = 1000
     val leg = EmbodiedBeamLeg(
       BeamLeg(0,
-              BeamMode.CAR,
+              BeamMode.CAR.value,
               0,
               BeamPath(Vector(), None, SpaceTime.zero, SpaceTime.zero, 10.0)),
       Id.createVehicleId(13).toString,

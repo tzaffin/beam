@@ -44,7 +44,7 @@ public class PathTraversalEvent extends Event {
         super(time);
         this.vehicleType = vehicleType;
         this.vehicleId = vehicleId.toString();
-        this.mode = beamLeg.mode().value();
+        this.mode = beamLeg.mode();
         this.beamLeg = beamLeg;
         this.numPass = numPass;
         if (vehicleType.getCapacity()!=null) {

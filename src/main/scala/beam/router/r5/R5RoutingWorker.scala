@@ -103,9 +103,15 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
               .toLong
           case None =>
             val edge = transportNetwork.streetLayer.edgeStore.getCursor(linkId)
-            (edge.getLengthM / edge.calculateSpeed(
-              new ProfileRequest,
-              StreetMode.valueOf(leg.mode.r5Mode.get.left.get.toString))).toLong
+            (edge.getLengthM / edge.calculateSpeed(new ProfileRequest,
+                                                   StreetMode.valueOf(
+                                                     BeamMode
+                                                       .withValue(leg.mode)
+                                                       .r5Mode
+                                                       .get
+                                                       .left
+                                                       .get
+                                                       .toString))).toLong
       }
       val duration = RoutingModel
         .traverseStreetLeg(leg, vehicleId, travelTime)
@@ -236,7 +242,7 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
           val streetSegment = profileResponse.options.get(0).access.get(0)
           Some(
             BeamLeg(time.atTime,
-                    mapLegMode(LegMode.WALK),
+                    mapLegMode(LegMode.WALK).value,
                     travelTime,
                     travelPath = buildStreetPath(streetSegment, time.atTime)))
         } else {
@@ -291,7 +297,7 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
           val streetSegment = profileResponse.options.get(0).access.get(0)
           Some(
             BeamLeg(time.atTime,
-                    vehicle.mode,
+                    vehicle.mode.value,
                     travelTime,
                     travelPath = buildStreetPath(streetSegment, time.atTime)))
         } else {
@@ -391,7 +397,7 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
             //        legFares += legs.size -> toll
             legsWithFares :+= (BeamLeg(
               tripStartTime,
-              mapLegMode(access.mode),
+              mapLegMode(access.mode).value,
               access.duration,
               travelPath = buildStreetPath(access, tripStartTime)), toll)
 
@@ -436,7 +442,7 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
                   if (transitSegment.middle != null) {
                     legsWithFares :+= (BeamLeg(
                       arrivalTime,
-                      mapLegMode(transitSegment.middle.mode),
+                      mapLegMode(transitSegment.middle.mode).value,
                       transitSegment.middle.duration,
                       travelPath = buildStreetPath(transitSegment.middle,
                                                    arrivalTime)), 0.0)
@@ -449,7 +455,7 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
                 val egress = option.egress.get(itinerary.connection.egress)
                 //start time would be the arrival time of last stop and 5 second alighting
                 legsWithFares :+= (BeamLeg(arrivalTime,
-                                           mapLegMode(egress.mode),
+                                           mapLegMode(egress.mode).value,
                                            egress.duration,
                                            buildStreetPath(egress,
                                                            arrivalTime)), 0.0)
@@ -472,7 +478,7 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
         val embodiedLegs: Vector[EmbodiedBeamLeg] =
           for ((beamLeg, index) <- tripWithFares.trip.legs.zipWithIndex) yield {
             val cost = tripWithFares.legFares.getOrElse(index, 0.0) // FIXME this value is never used.
-            if (Modes.isR5TransitMode(beamLeg.mode)) {
+            if (Modes.isR5TransitMode(BeamMode.withValue(beamLeg.mode))) {
               EmbodiedBeamLeg(
                 beamLeg,
                 beamLeg.travelPath.transitStops.get.vehicleId.toString,
@@ -482,7 +488,7 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
                 false)
             } else {
               val unbecomeDriverAtComplete = Modes
-                .isR5LegMode(beamLeg.mode) && (beamLeg.mode != WALK || beamLeg == tripWithFares.trip.legs.last)
+                .isR5LegMode(BeamMode.withValue(beamLeg.mode)) && (beamLeg.mode != WALK.value || beamLeg == tripWithFares.trip.legs.last)
               if (beamLeg.mode == WALK) {
                 val body =
                   routingRequest.streetVehicles.find(_.mode == WALK).get
@@ -528,7 +534,7 @@ class R5RoutingWorker(val beamConfig: BeamConfig,
             EmbodiedBeamLeg(
               BeamLeg(
                 routingRequest.departureTime.atTime,
-                WALK,
+                WALK.value,
                 bushwhackingTime,
                 BeamPath(
                   Vector(),

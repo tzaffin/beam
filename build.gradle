@@ -12,6 +12,7 @@ buildscript {
         classpath group: 'kr.motd.gradle', name: 'sphinx-gradle-plugin', version: '1.0.3.Final'
         classpath "jp.classmethod.aws:gradle-aws-plugin:0.35"
         classpath "com.github.viswaramamoorthy:gradle-util-plugins:0.1.0-RELEASE"
+        classpath 'com.bmuschko:gradle-docker-plugin:3.2.8'
     }
 }
 
@@ -32,6 +33,7 @@ apply plugin: 'idea'
 apply plugin: 'kr.motd.sphinx'
 apply plugin: 'application'
 apply plugin: 'ManifestClasspath'
+apply plugin: 'com.bmuschko.docker-remote-api'
 
 group = 'beam'
 version = '0.5.0-SNAPSHOT'
@@ -126,9 +128,15 @@ dependencies {
     compile group: 'edu.ucar', name: 'udunits', version: '4.5.5'
     compile 'org.reflections:reflections:0.9.10'
     compile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.2-b01'
+    compile (group: 'log4j', name: 'log4j', version: '1.2.17') {
+        exclude group: 'com.sun.jmx', module: 'jmxri'
+        exclude group: 'com.sun.jdmk', module: 'jmxtools'
+        exclude group: 'javax.jms', module: 'jms'
+        exclude group: "javax.mail", module: 'mail'
+    }
 
     compile group: 'org.matsim.contrib', name: 'multimodal', version: '0.9.0'
-    compile (group: 'org.matsim', name: 'matsim', version: '0.10.0-beam-1') {
+    compile (group: 'org.matsim', name: 'matsim', version: '0.10.0-SNAPSHOT') {
         exclude group: 'log4j', module: 'log4j'
     }
     compile group: 'org.matsim.contrib', name: 'socnetsim', version: '0.9.0'
@@ -188,6 +196,7 @@ dependencies {
     compile group: 'org.yaml', name: 'snakeyaml', version: '1.18'
 
     compile group: 'com.typesafe.play', name: "play-json_${scalaBinaryVersion}", version: '2.6.3'
+    compile group: 'com.github.romix.akka', name: "akka-kryo-serialization_${scalaBinaryVersion}", version: '0.5.1'
 
     ////////////////////////////////////
     ///Performance Monitoring (Kamon)///
@@ -350,6 +359,21 @@ task deleteSf {
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.allSource
+}
+
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+task createDockerfile(type: Dockerfile) {
+    destFile = project.file('build/beam/Dockerfile')
+    from 'openjdk:alpine'
+    maintainer 'Kirill Mitin "kirill-nor@gmail.com"'
+}
+
+task buildImage(type: DockerBuildImage) {
+    dependsOn createDockerfile
+    inputDir = createDockerfile.destFile.parentFile
+    tag = 'nor/beam:latest'
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////

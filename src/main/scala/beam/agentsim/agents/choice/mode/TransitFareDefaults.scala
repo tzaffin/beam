@@ -21,10 +21,10 @@ object TransitFareDefaults {
           var vehId = Id.createVehicleId("dummy")
           var theFare = BigDecimal(0.0)
           alt.legs.foreach { leg =>
-            if (leg.beamVehicleId != vehId && faresByMode.contains(
-                  leg.beamLeg.mode)) {
+            if (leg.beamVehicleId != vehId.toString && faresByMode.contains(
+                  BeamMode.withValue(leg.beamLeg.mode))) {
               theFare = theFare + BigDecimal(
-                faresByMode.get(leg.beamLeg.mode).get)
+                faresByMode.get(BeamMode.withValue(leg.beamLeg.mode)).get)
               vehId = Id.createVehicleId(leg.beamVehicleId)
             }
           }

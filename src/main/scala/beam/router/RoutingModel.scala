@@ -28,7 +28,8 @@ object RoutingModel {
   case class BeamTrip(legs: Vector[BeamLeg], accessMode: BeamMode)
 
   object BeamTrip {
-    def apply(legs: Vector[BeamLeg]): BeamTrip = BeamTrip(legs, legs.head.mode)
+    def apply(legs: Vector[BeamLeg]): BeamTrip =
+      BeamTrip(legs, BeamMode.withValue(legs.head.mode))
 
     val empty: BeamTrip = BeamTrip(Vector(), BeamMode.WALK)
   }
@@ -54,7 +55,7 @@ object RoutingModel {
       var hasUsedCar: Boolean = false
       legs.foreach { leg =>
         // Any presence of transit makes it transit
-        if (leg.beamLeg.mode.isTransit) {
+        if (BeamMode.withValue(leg.beamLeg.mode).isTransit) {
           theMode = TRANSIT
         } else if (theMode == WALK && leg.beamLeg.mode == CAR) {
           if ((legs.size == 1 && legs(0).beamVehicleId.toString.contains(
@@ -102,7 +103,7 @@ object RoutingModel {
     * @param travelPath
     */
   case class BeamLeg(startTime: Long,
-                     mode: BeamMode,
+                     mode: String,
                      duration: Long,
                      travelPath: BeamPath) {
     val endTime: Long = startTime + duration
@@ -114,7 +115,7 @@ object RoutingModel {
   object BeamLeg {
     def dummyWalk(startTime: Long): BeamLeg =
       new BeamLeg(startTime,
-                  WALK,
+                  WALK.value,
                   0,
                   BeamPath(Vector(), None, SpaceTime.zero, SpaceTime.zero, 0))
   }
@@ -152,9 +153,7 @@ object RoutingModel {
     }
   }
 
-  case class TransitStopsInfo(fromStopId: Int,
-                              vehicleId: Id[Vehicle],
-                              toStopId: Int)
+  case class TransitStopsInfo(fromStopId: Int, vehicleId: String, toStopId: Int)
 
   /**
     *

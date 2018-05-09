@@ -13,20 +13,21 @@ public class Main_EventsFileComparator {
             String filePath   = args[0];
             String filePath1 = args[1];
 
-            switch(EventsFileComparator.compare(filePath,filePath1)){
-                case EventsFileComparator.CODE_DIFFERENT_NUMBER_OF_TIMESTEPS:
+            final EventsFileComparator.Result compare = EventsFileComparator.compare(filePath, filePath1);
+            switch(compare){
+                case DIFFERENT_NUMBER_OF_TIMESTEPS:
                     log.info("Different number of time steps");
                     break;
-                case EventsFileComparator.CODE_DIFFERENT_TIMESTEPS:
+                case DIFFERENT_TIMESTEPS:
                     log.info("Different time steps");
                     break;
-                case EventsFileComparator.CODE_FILES_ARE_EQUAL:
+                case FILES_ARE_EQUAL:
                     log.info("Files are equal");
                     break;
-                case EventsFileComparator.CODE_MISSING_EVENT:
+                case MISSING_EVENT:
                     log.info("Missing Events");
                     break;
-                case EventsFileComparator.CODE_WRONG_EVENT_COUNT:
+                case WRONG_EVENT_COUNT:
                     log.info("Wrong event count");
                     break;
             }

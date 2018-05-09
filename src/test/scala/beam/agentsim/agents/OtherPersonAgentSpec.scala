@@ -156,11 +156,11 @@ class OtherPersonAgentSpec
       val busLeg = EmbodiedBeamLeg(
         BeamLeg(
           28800,
-          BeamMode.BUS,
+          BeamMode.BUS.value,
           600,
           BeamPath(
             Vector(),
-            Some(TransitStopsInfo(1, Id.createVehicleId("my_bus"), 2)),
+            Some(TransitStopsInfo(1, "my_bus", 2)),
             SpaceTime(new Coord(166321.9, 1568.87), 28800),
             SpaceTime(new Coord(167138.4, 1117), 29400),
             1.0
@@ -175,11 +175,11 @@ class OtherPersonAgentSpec
       val busLeg2 = EmbodiedBeamLeg(
         BeamLeg(
           29400,
-          BeamMode.BUS,
+          BeamMode.BUS.value,
           600,
           BeamPath(
             Vector(),
-            Some(TransitStopsInfo(2, Id.createVehicleId("my_bus"), 3)),
+            Some(TransitStopsInfo(2, "my_bus", 3)),
             SpaceTime(new Coord(167138.4, 1117), 29400),
             SpaceTime(new Coord(180000.4, 1200), 30000),
             1.0
@@ -194,11 +194,11 @@ class OtherPersonAgentSpec
       val tramLeg = EmbodiedBeamLeg(
         BeamLeg(
           30000,
-          BeamMode.TRAM,
+          BeamMode.TRAM.value,
           600,
           BeamPath(
             Vector(),
-            Some(TransitStopsInfo(3, Id.createVehicleId("my_tram"), 4)),
+            Some(TransitStopsInfo(3, "my_tram", 4)),
             SpaceTime(new Coord(180000.4, 1200), 30000),
             SpaceTime(new Coord(190000.4, 1300), 30600),
             1.0
@@ -213,11 +213,11 @@ class OtherPersonAgentSpec
       val replannedTramLeg = EmbodiedBeamLeg(
         BeamLeg(
           35000,
-          BeamMode.TRAM,
+          BeamMode.TRAM.value,
           600,
           BeamPath(
             Vector(),
-            Some(TransitStopsInfo(3, Id.createVehicleId("my_tram"), 4)),
+            Some(TransitStopsInfo(3, "my_tram", 4)),
             SpaceTime(new Coord(180000.4, 1200), 35000),
             SpaceTime(new Coord(190000.4, 1300), 35600),
             1.0
@@ -295,7 +295,7 @@ class OtherPersonAgentSpec
         Vector(EmbodiedBeamTrip(Vector(
           EmbodiedBeamLeg(
             BeamLeg(28800,
-                    BeamMode.WALK,
+                    BeamMode.WALK.value,
                     0,
                     BeamPath(Vector(),
                              None,
@@ -313,7 +313,7 @@ class OtherPersonAgentSpec
           tramLeg,
           EmbodiedBeamLeg(
             BeamLeg(30600,
-                    BeamMode.WALK,
+                    BeamMode.WALK.value,
                     0,
                     BeamPath(Vector(),
                              None,
@@ -366,7 +366,7 @@ class OtherPersonAgentSpec
           replannedTramLeg,
           EmbodiedBeamLeg(
             BeamLeg(35600,
-                    BeamMode.WALK,
+                    BeamMode.WALK.value,
                     0,
                     BeamPath(Vector(),
                              None,

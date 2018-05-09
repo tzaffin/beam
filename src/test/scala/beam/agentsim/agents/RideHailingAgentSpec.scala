@@ -8,13 +8,20 @@ import akka.util.Timeout
 import beam.agentsim.Resource.{CheckInResource, RegisterResource}
 import beam.agentsim.agents.BeamAgent.Finish
 import beam.agentsim.agents.rideHail.RideHailingAgent
-import beam.agentsim.agents.rideHail.RideHailingAgent.{ModifyPassengerSchedule, ModifyPassengerScheduleAck}
+import beam.agentsim.agents.rideHail.RideHailingAgent.{
+  ModifyPassengerSchedule,
+  ModifyPassengerScheduleAck
+}
 import beam.agentsim.agents.vehicles.{BeamVehicle, PassengerSchedule}
 import beam.agentsim.agents.vehicles.BeamVehicleType.Car
 import beam.agentsim.agents.vehicles.EnergyEconomyAttributes.Powertrain
 import beam.agentsim.events.ModeChoiceEvent
 import beam.agentsim.scheduler.{BeamAgentScheduler, Trigger, TriggerWithId}
-import beam.agentsim.scheduler.BeamAgentScheduler.{ScheduleTrigger, SchedulerProps, StartSchedule}
+import beam.agentsim.scheduler.BeamAgentScheduler.{
+  ScheduleTrigger,
+  SchedulerProps,
+  StartSchedule
+}
 import beam.router.Modes.BeamMode
 import beam.router.RoutingModel.{BeamLeg, BeamPath, EmptyBeamPath}
 import beam.router.r5.NetworkCoordinator
@@ -34,13 +41,26 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike}
 
 import scala.collection.concurrent.TrieMap
 
-class RideHailingAgentSpec extends TestKit(ActorSystem("testsystem", ConfigFactory.parseString(
-  """
+class RideHailingAgentSpec
+    extends TestKit(
+      ActorSystem(
+        "testsystem",
+        ConfigFactory
+          .parseString("""
   akka.log-dead-letters = 10
   akka.actor.debug.fsm = true
   akka.loglevel = debug
-  """).withFallback(BeamConfigUtils.parseFileSubstitutingInputDirectory("test/input/beamville/beam.conf").resolve()))) with FunSpecLike
-  with BeforeAndAfterAll with MockitoSugar with ImplicitSender {
+  """)
+          .withFallback(
+            BeamConfigUtils
+              .parseFileSubstitutingInputDirectory(
+                "test/input/beamville/beam.conf")
+              .resolve())
+      ))
+    with FunSpecLike
+    with BeforeAndAfterAll
+    with MockitoSugar
+    with ImplicitSender {
 
   private implicit val timeout = Timeout(60, TimeUnit.SECONDS)
   val config = BeamConfig(system.settings.config)
@@ -64,7 +84,8 @@ class RideHailingAgentSpec extends TestKit(ActorSystem("testsystem", ConfigFacto
 
   case class TestTrigger(tick: Double) extends Trigger
 
-  private val networkCoordinator = new NetworkCoordinator(config, VehicleUtils.createVehiclesContainer())
+  private val networkCoordinator =
+    new NetworkCoordinator(config, VehicleUtils.createVehiclesContainer())
   networkCoordinator.loadNetwork()
 
   describe("A RideHailingAgent") {
@@ -78,16 +99,25 @@ class RideHailingAgentSpec extends TestKit(ActorSystem("testsystem", ConfigFacto
       beamVehicle.registerResource(self)
       vehicles.put(vehicleId, beamVehicle)
 
-      val scheduler = TestActorRef[BeamAgentScheduler](SchedulerProps(config, stopTick = 1000000.0, maxWindow = 10.0))
+      val scheduler = TestActorRef[BeamAgentScheduler](
+        SchedulerProps(config, stopTick = 1000000.0, maxWindow = 10.0))
 
-      val rideHailingAgent = TestActorRef[RideHailingAgent](new RideHailingAgent(Id.create("1", classOf[RideHailingAgent]), scheduler, beamVehicle, new Coord(0.0, 0.0), eventsManager, services, networkCoordinator.transportNetwork))
+      val rideHailingAgent = TestActorRef[RideHailingAgent](
+        new RideHailingAgent(Id.create("1", classOf[RideHailingAgent]),
+                             scheduler,
+                             beamVehicle,
+                             new Coord(0.0, 0.0),
+                             eventsManager,
+                             services,
+                             networkCoordinator.transportNetwork))
       expectMsgType[RegisterResource]
 
       scheduler ! ScheduleTrigger(InitializeTrigger(28800), rideHailingAgent)
       scheduler ! ScheduleTrigger(TestTrigger(30000), self)
 
       val passengerSchedule = PassengerSchedule()
-        .addLegs(Seq(BeamLeg(28800, BeamMode.CAR, 10000, EmptyBeamPath.path)))
+        .addLegs(
+          Seq(BeamLeg(28800, BeamMode.CAR.value, 10000, EmptyBeamPath.path)))
       rideHailingAgent ! ModifyPassengerSchedule(passengerSchedule)
       expectMsgType[ModifyPassengerScheduleAck]
 
@@ -106,10 +136,8 @@ class RideHailingAgentSpec extends TestKit(ActorSystem("testsystem", ConfigFacto
 
   }
 
-
   override def afterAll: Unit = {
     shutdown()
   }
 
 }
-

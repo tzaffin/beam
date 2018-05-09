@@ -173,7 +173,8 @@ class BeamRouter(services: BeamServices,
                    vehicleId: Id[Vehicle]) =>
                     BeamPath(
                       edges.map(_.intValue()).toVector,
-                      Option(TransitStopsInfo(fromStop, vehicleId, toStop)),
+                      Option(
+                        TransitStopsInfo(fromStop, vehicleId.toString, toStop)),
                       SpaceTime(startEdge.getGeometry.getStartPoint.getX,
                                 startEdge.getGeometry.getStartPoint.getY,
                                 departureTime),
@@ -193,7 +194,8 @@ class BeamRouter(services: BeamServices,
                    vehicleId: Id[Vehicle]) =>
                     BeamPath(
                       edgeIds,
-                      Option(TransitStopsInfo(fromStop, vehicleId, toStop)),
+                      Option(
+                        TransitStopsInfo(fromStop, vehicleId.toString, toStop)),
                       SpaceTime(startEdge.getGeometry.getStartPoint.getX,
                                 startEdge.getGeometry.getStartPoint.getY,
                                 departureTime),
@@ -217,7 +219,8 @@ class BeamRouter(services: BeamServices,
               (departureTime: Long, duration: Int, vehicleId: Id[Vehicle]) =>
                 BeamPath(
                   edgeIds,
-                  Option(TransitStopsInfo(fromStop, vehicleId, toStop)),
+                  Option(
+                    TransitStopsInfo(fromStop, vehicleId.toString, toStop)),
                   SpaceTime(startEdge.getGeometry.getStartPoint.getX,
                             startEdge.getGeometry.getStartPoint.getY,
                             departureTime),
@@ -245,7 +248,7 @@ class BeamRouter(services: BeamServices,
             case Array((departureTimeFrom, from), (departureTimeTo, to)) =>
               val duration = tripSchedule.arrivals(to) - departureTimeFrom
               legs :+= BeamLeg(departureTimeFrom.toLong,
-                               mode,
+                               mode.value,
                                duration,
                                transitPaths(from)(departureTimeFrom.toLong,
                                                   duration,

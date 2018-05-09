@@ -128,7 +128,9 @@ class ModeChoiceMultinomialLogit(val beamServices: BeamServices,
           var nVeh = -1
           var vehId = Id.create("dummy", classOf[Vehicle])
           altAndIdx._1.legs.foreach { leg =>
-            if (leg.beamLeg.mode.isTransit() && leg.beamVehicleId != vehId) {
+            if (BeamMode
+                  .withValue(leg.beamLeg.mode)
+                  .isTransit() && leg.beamVehicleId != vehId) {
               vehId = Id.createVehicleId(leg.beamVehicleId)
               nVeh = nVeh + 1
             }
