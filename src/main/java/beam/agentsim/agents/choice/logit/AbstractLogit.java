@@ -1,19 +1,20 @@
 package beam.agentsim.agents.choice.logit;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Random;
 
 /**
  * BEAM
  */
 public interface AbstractLogit {
-    DiscreteProbabilityDistribution evaluateProbabilities(LinkedHashMap<String, LinkedHashMap<String, Double>> inputData);
+    DiscreteProbabilityDistribution evaluateProbabilities(Map<String, Map<String, Double>> inputData);
 
-    String makeRandomChoice(LinkedHashMap<String, LinkedHashMap<String, Double>> inputData, Random rand);
+    String makeRandomChoice(Map<String, Map<String, Double>> inputData, Random rand);
 
     Double getExpectedMaximumUtility();
 
-    Double getUtilityOfAlternative(LinkedHashMap<String, LinkedHashMap<String, Double>> inputData);
+    Double getUtilityOfAlternative(Map<String, Map<String, Double>> inputData);
 
     void clear(); // Delete any state stored for use in evaluating distribution of given inputs
 }

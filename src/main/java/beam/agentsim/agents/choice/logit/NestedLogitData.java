@@ -1,28 +1,32 @@
 package beam.agentsim.agents.choice.logit;
 
 public class NestedLogitData {
-	String nestName;
-	Double elasticity = 1.0, expectedMaximumUtility =  Double.NaN;
-	UtilityFunction utility;
+	private String nestName;
+  private Double elasticity = 1.0d;
+  private double expectedMaximumUtility =  Double.NaN;
+	private UtilityFunction utility;
 	
-	public String getNestName() {
-		return nestName;
-	}
+//	public NestedLogitData(Double elasticity, UtilityFunction utility) {
+//		this.elasticity = elasticity;
+//		this.utility = utility;
+//	}
+//
+//  public NestedLogitData() {
+//  }
 
-	public void setNestName(String nestName) {
-		this.nestName = nestName;
-	}
-	
-	public NestedLogitData(Double elasticity, UtilityFunction utility) {
-		this.elasticity = elasticity;
-		this.utility = utility;
-	}
+  String getNestName() {
+    return nestName;
+  }
 
-	public Double getElasticity() {
+  void setNestName(String nestName) {
+    this.nestName = nestName;
+  }
+
+  Double getElasticity() {
 		return elasticity;
 	}
 
-	public void setElasticity(Double elasticity) {
+	void setElasticity(Double elasticity) {
 		this.elasticity = elasticity;
 	}
 
@@ -34,16 +38,16 @@ public class NestedLogitData {
 		this.utility = utility;
 	}
 
-	public NestedLogitData() {
-	}
 	public String toString(){
 		return nestName;
 	}
-	public Double getExpectedMaxUtility() {
+
+	Double getExpectedMaxUtility() {
 		return expectedMaximumUtility;
 	}
 
-	public void setExpectedMaxUtility(Double expectedMaximumUtility) {
+	void setExpectedMaxUtility(Double expectedMaximumUtility) {
 		this.expectedMaximumUtility = expectedMaximumUtility;
 	}
+
 }
