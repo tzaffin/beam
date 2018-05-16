@@ -16,11 +16,17 @@ import akka.actor.{
   Terminated
 }
 import akka.cluster.Cluster
+import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
 import akka.pattern.ask
 import akka.routing.Broadcast
 import akka.util.Timeout
 import beam.agentsim.agents.BeamAgent.Finish
-import beam.agentsim.agents.{BeamAgent, InitializeTrigger, Population}
+import beam.agentsim.agents.{
+  BeamAgent,
+  InitializeTrigger,
+  Population,
+  TransitDriverAgent
+}
 import beam.agentsim.agents.rideHail.RideHailingManager.{
   NotifyIterationEnds,
   RepositioningTimer
@@ -109,6 +115,17 @@ class BeamMobsim @Inject()(
     context.system.eventStream.subscribe(errorListener, classOf[DeadLetter])
     context.watch(scheduler)
 
+    private val transitShardRegion = ClusterSharding(context.system).start(
+      typeName = "TransitDriverAgent",
+      entityProps = TransitDriverAgent.props(scheduler,
+                                             beamServices,
+                                             transportNetwork,
+                                             eventsManager),
+      settings = ClusterShardingSettings(context.system).withRole("base"),
+      extractEntityId = TransitDriverAgent.extractEntityId,
+      extractShardId = TransitDriverAgent.extractShardId
+    )
+
     private val envelopeInUTM =
       beamServices.geo.wgs2Utm(transportNetwork.streetLayer.envelope)
     envelopeInUTM.expandBy(
@@ -123,14 +140,17 @@ class BeamMobsim @Inject()(
                       "RideHailingManager")
     context.watch(rideHailingManager)
     private val population =
-      context.actorOf(Population.props(scenario,
-                                       beamServices,
-                                       scheduler,
-                                       transportNetwork,
-                                       beamServices.beamRouter,
-                                       rideHailingManager,
-                                       eventsManager),
-                      "population")
+      context.actorOf(
+        Population.props(scenario,
+                         beamServices,
+                         scheduler,
+                         transportNetwork,
+                         beamServices.beamRouter,
+                         rideHailingManager,
+                         transitShardRegion,
+                         eventsManager),
+        "population"
+      )
     context.watch(population)
     Await.result(population ? Identify(0), timeout.duration)
 
@@ -340,12 +360,6 @@ class BeamMobsim @Inject()(
     val cluster = Cluster(actorSystem)
     if (cluster.selfRoles.contains("base")) {
       val iteration = actorSystem.actorOf(Props(new MasterActor))
-      /*cluster.registerOnMemberUp {
-        Await.result(iteration ? "Run!", timeout.duration)
-        logger.info("Agentsim finished.")
-        eventsManager.finishProcessing()
-        logger.info("Events drained.")
-      }*/
       Await.result(iteration ? "Run!", timeout.duration)
       logger.info("Agentsim finished.")
       eventsManager.finishProcessing()

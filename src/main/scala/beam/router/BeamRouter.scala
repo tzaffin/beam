@@ -6,8 +6,14 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.Status.Success
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Stash}
+import akka.cluster.sharding.ClusterSharding
 import akka.routing.{Broadcast, RoundRobinPool}
 import akka.util.Timeout
+import beam.agentsim.agents.TransitDriverAgent.{
+  InitTransitDrive,
+  TransitDataEnvelope,
+  TransitInitiated
+}
 import beam.agentsim.agents.vehicles.BeamVehicle
 import beam.agentsim.agents.vehicles.BeamVehicleType.TransitVehicle
 import beam.agentsim.agents.vehicles.EnergyEconomyAttributes.Powertrain
@@ -46,6 +52,10 @@ class BeamRouter(services: BeamServices,
     extends Actor
     with Stash
     with ActorLogging {
+
+  import akka.pattern.ask
+  import context.dispatcher
+
   private implicit val timeout = Timeout(50000, TimeUnit.SECONDS)
 
   private val config = services.beamConfig.beam.routing
@@ -67,6 +77,8 @@ class BeamRouter(services: BeamServices,
       val transitSchedule = initTransit(scheduler)
       routerWorker ! Broadcast(TransitInited(transitSchedule))
       sender ! Success("success")
+    case u @ UpdateTravelTime(_) =>
+      routerWorker ! Broadcast(u)
     case msg =>
       routerWorker.forward(msg)
   }
@@ -83,6 +95,14 @@ class BeamRouter(services: BeamServices,
    *
    */
   private def initTransit(scheduler: ActorRef) = {
+    val transitDriveAgent =
+      ClusterSharding(context.system).startProxy(
+        typeName = "TransitDriverAgent",
+        role = Some("base"),
+        extractEntityId = TransitDriverAgent.extractEntityId,
+        extractShardId = TransitDriverAgent.extractShardId
+      )
+
     def createTransitVehicle(transitVehId: Id[Vehicle],
                              route: RouteInfo,
                              legs: Seq[BeamLeg]): Unit = {
@@ -121,21 +141,14 @@ class BeamRouter(services: BeamServices,
             matSimTransitVehicle,
             None,
             TransitVehicle)
-          services.vehicles += (transitVehId -> vehicle)
-          val transitDriverId =
-            TransitDriverAgent.createAgentIdFromVehicleId(transitVehId)
-          val transitDriverAgentProps = TransitDriverAgent.props(
-            scheduler,
-            services,
-            transportNetwork,
-            eventsManager,
-            transitDriverId,
-            vehicle,
-            legs)
-          val transitDriver =
-            context.actorOf(transitDriverAgentProps, transitDriverId.toString)
-          scheduler ! ScheduleTrigger(InitializeTrigger(0.0), transitDriver)
-
+          log.info(s"Added $transitVehId -> $vehicle")
+          //services.vehicles += (transitVehId -> vehicle)
+          (transitDriveAgent ? TransitDataEnvelope(
+            transitVehId,
+            InitTransitDrive(transitVehId, vehicle, legs)))
+            .mapTo[TransitInitiated]
+            .foreach(t =>
+              scheduler ! ScheduleTrigger(InitializeTrigger(0.0), t.ref))
         case _ =>
           log.error(mode + " is not supported yet")
       }

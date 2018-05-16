@@ -10,6 +10,7 @@ import beam.agentsim.Resource.{
 }
 import beam.agentsim.agents.BeamAgent._
 import beam.agentsim.agents.PersonAgent._
+import beam.agentsim.agents.TransitDriverAgent.TransitDataEnvelope
 import beam.agentsim.agents.household.HouseholdActor.ReleaseVehicleReservation
 import beam.agentsim.agents.modalBehaviors.ChoosesMode.ChoosesModeData
 import beam.agentsim.agents.modalBehaviors.DrivesVehicle.{
@@ -61,6 +62,7 @@ object PersonAgent {
             transportNetwork: TransportNetwork,
             router: ActorRef,
             rideHailingManager: ActorRef,
+            transitDriverAgent: ActorRef,
             eventsManager: EventsManager,
             personId: Id[PersonAgent],
             household: Household,
@@ -73,6 +75,7 @@ object PersonAgent {
                       transportNetwork,
                       router,
                       rideHailingManager,
+                      transitDriverAgent,
                       eventsManager,
                       personId,
                       plan,
@@ -150,6 +153,7 @@ class PersonAgent(val scheduler: ActorRef,
                   val transportNetwork: TransportNetwork,
                   val router: ActorRef,
                   val rideHailingManager: ActorRef,
+                  val transitDriverAgent: ActorRef,
                   val eventsManager: EventsManager,
                   override val id: Id[PersonAgent],
                   val matsimPlan: Plan,
@@ -445,8 +449,9 @@ class PersonAgent(val scheduler: ActorRef,
         legSegment.head.beamLeg,
         legSegment.last.beamLeg,
         VehiclePersonId(Id.createVehicleId(legSegment.head.beamVehicleId), id))
-      TransitDriverAgent.selectByVehicleId(
-        Id.createVehicleId(legSegment.head.beamVehicleId)) ! resRequest
+      transitDriverAgent ! TransitDataEnvelope(
+        Id.createVehicleId(legSegment.head.beamVehicleId),
+        resRequest)
       goto(WaitingForTransitReservationConfirmation)
     case Event(StateTimeout, BasePersonData(_, _, _ :: _, _, _, _, _, _, _)) =>
       val (_, triggerId) = releaseTickAndTriggerId()

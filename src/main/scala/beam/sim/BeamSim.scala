@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorSystem, Identify, Props}
 import akka.cluster.Cluster
+import akka.cluster.sharding.ClusterSharding
 import akka.pattern.ask
 import akka.routing.FromConfig
 import akka.util.Timeout

@@ -280,6 +280,7 @@ class OtherPersonAgentSpec
           networkCoordinator.transportNetwork,
           self,
           self,
+          self,
           eventsManager,
           population,
           household.getId,

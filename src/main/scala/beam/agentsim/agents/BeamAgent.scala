@@ -4,12 +4,14 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorRef, FSM, LoggingFSM}
 import beam.agentsim.agents.BeamAgent._
-import beam.agentsim.scheduler.BeamAgentScheduler.{CompletionNotice, ScheduleTrigger}
+import beam.agentsim.scheduler.BeamAgentScheduler.{
+  CompletionNotice,
+  ScheduleTrigger
+}
 import beam.agentsim.scheduler.{Trigger, TriggerWithId}
 import beam.sim.metrics.{Metrics, MetricsSupport}
 import org.matsim.api.core.v01.Id
 import org.matsim.core.api.experimental.events.EventsManager
-
 
 object BeamAgent {
 
@@ -22,14 +24,15 @@ object BeamAgent {
 
   case object Finish
 
+  case object Stop
+
   case class TerminatedPrematurelyEvent(actorRef: ActorRef, reason: FSM.Reason)
 
 }
 
 case class InitializeTrigger(tick: Double) extends Trigger
 
-
-trait BeamAgent[T] extends LoggingFSM[BeamAgentState, T]  {
+trait BeamAgent[T] extends LoggingFSM[BeamAgentState, T] {
 
   val scheduler: ActorRef
   val eventsManager: EventsManager
@@ -41,20 +44,26 @@ trait BeamAgent[T] extends LoggingFSM[BeamAgentState, T]  {
   protected var _currentTick: Option[Double] = None
 
   onTermination {
-    case event@StopEvent(reason@(FSM.Failure(_) | FSM.Shutdown), _, stateData) =>
+    case event @ StopEvent(reason @ (FSM.Failure(_) | FSM.Shutdown),
+                           _,
+                           stateData) =>
       reason match {
         case FSM.Shutdown =>
-          log.error("Got Shutdown. This means actorRef.stop() was called externally, e.g. by supervisor because of an exception.\n")
+          log.error(
+            s"Got Shutdown. This means $id and ${self.path.name} actorRef.stop() was called externally, e.g. by supervisor because of an exception.\n")
         case _ =>
       }
       log.error(event.toString)
-      log.error("Events leading up to this point:\n\t" + getLog.mkString("\n\t"))
-      context.system.eventStream.publish(TerminatedPrematurelyEvent(self, reason))
+      log.error(
+        "Events leading up to this point:\n\t" + getLog.mkString("\n\t"))
+      context.system.eventStream
+        .publish(TerminatedPrematurelyEvent(self, reason))
   }
 
   def holdTickAndTriggerId(tick: Double, triggerId: Long) = {
     if (_currentTriggerId.isDefined || _currentTick.isDefined)
-      throw new IllegalStateException(s"Expected both _currentTick and _currentTriggerId to be 'None' but found ${_currentTick} and ${_currentTriggerId} instead, respectively.")
+      throw new IllegalStateException(
+        s"Expected both _currentTick and _currentTriggerId to be 'None' but found ${_currentTick} and ${_currentTriggerId} instead, respectively.")
 
     _currentTick = Some(tick)
     _currentTriggerId = Some(triggerId)
@@ -102,4 +111,3 @@ trait BeamAgent[T] extends LoggingFSM[BeamAgentState, T]  {
   }
 
 }
-

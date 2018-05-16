@@ -26,11 +26,10 @@ import org.matsim.vehicles.{Vehicle, VehicleType}
 // TODO: safety for
 class BeamVehicle(val powerTrain: Powertrain,
                   val matSimVehicle: Vehicle,
-                  val  initialMatsimAttributes: Option[ObjectAttributes],
-                  val  beamVehicleType: BeamVehicleType,
-  )
-  extends Resource[BeamVehicle] {
-    val log: Logger = Logger.getLogger(classOf[BeamVehicle])
+                  val initialMatsimAttributes: Option[ObjectAttributes],
+                  val beamVehicleType: BeamVehicleType,
+) extends Resource[BeamVehicle] {
+  @transient val log: Logger = Logger.getLogger(classOf[BeamVehicle])
 
   /**
     * Identifier for this vehicle
@@ -64,7 +63,7 @@ class BeamVehicle(val powerTrain: Powertrain,
     * @param newDriverRef incoming driver
     */
   def becomeDriver(newDriverRef: ActorRef)
-  : Either[DriverAlreadyAssigned, BecomeDriverOfVehicleSuccessAck.type ] = {
+    : Either[DriverAlreadyAssigned, BecomeDriverOfVehicleSuccessAck.type] = {
     if (driver.isEmpty) {
       driver = Option(newDriverRef)
       Right(BecomeDriverOfVehicleSuccessAck)
