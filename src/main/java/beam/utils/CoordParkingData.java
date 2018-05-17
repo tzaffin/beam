@@ -12,6 +12,8 @@ import org.hsqldb.lib.StringUtil;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.*;
 
@@ -28,22 +30,13 @@ public class CoordParkingData {
         double maxParkingDuration = 0;
 
         StringBuilder result = new StringBuilder();
-        /*String latitude = "37.761479";
-        String longitude = "-122.448245";
-        String radius = "7.8";
-        String duration = "1";
-        String access_key = "sandbox-DOGkYsosaV-oFVBVoh-gYKIFtpFdpJycYX5Tc2-_AWA";
-        String api = "https://api.sandbox.coord.co/v1/search/curbs/bylocation/all_rules?latitude=" + latitude + "&longitude=" + longitude + "&radius_km=" + radius + "&access_key=" + access_key;
-        String line;
-        URL url = new URL(api);
-        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        while ((line = rd.readLine()) != null) {
-            result.append(line);
-        }
-        rd.close();
-*/
+
+        /**
+         * this will be used after discussing the final format
+         */
+//        result=getDataFromAPI();
+
+
         /**
          * using file for test purpose
          */
@@ -56,8 +49,8 @@ public class CoordParkingData {
         Map<String, OutputFormat> csvMap = new HashMap<>();
         /*
         String header = "curbId,startLongitude,startLatitude,endLongitude,feePerHour,endLatitude,totalCurbLength,totalNoParkingLength,totalNoStoppingLength,totalFreeParkingLength,totalPaidParkingLength,totalLoadingZoneLength,totalPassengerLoadingZoneLength,maxParkingDuration"
+        stringBuilder.append(header);
         */
-//        stringBuilder.append(header);
 
         List<Feature> features = coordDetail.getFeatures();
         if (features == null || features.isEmpty()) {
@@ -97,11 +90,18 @@ public class CoordParkingData {
 
             Set<String> permittedSet = new HashSet<>();
             for (Rule rule : feature.getProperties().getRules()) {
-                if (rule.getPermitted().isEmpty()) {
-                    permittedSet.add(OutputFormat.LengthHeading.NO_STOPPING.toString());
-                    addLengthToMap(curbLength,outputFormat,OutputFormat.LengthHeading.NO_STOPPING);
-                } else {
-                    if ( rule.getPermitted().contains(Permitted.PARK)) {
+                if (rule.getPrimary().equals(Rule.Primary.NONE)) {
+                    if (rule.getPermitted().isEmpty()) {
+                        permittedSet.add(OutputFormat.LengthHeading.NO_STOPPING.toString());
+                        addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.NO_STOPPING);
+                    } else {
+                        permittedSet.add(OutputFormat.LengthHeading.NO_PARKING.toString());
+                        addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.NO_PARKING);
+                    }
+                } else if (rule.getPrimary().equals(Rule.Primary.PARK)) {
+                    if (rule.getMaxDurationH() != null && maxParkingDuration < rule.getMaxDurationH()) {
+                        maxParkingDuration = rule.getMaxDurationH();
+                    }
                         List<Price> prices = rule.getPrice();
                         Double pricePerHour = prices.get(0).getPricePerHour().getAmount();
                         if (pricePerHour == null || pricePerHour == 0) {
@@ -118,7 +118,12 @@ public class CoordParkingData {
                             permittedSet.add(OutputFormat.LengthHeading.PAID_PARKING.toString());
                             addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.PAID_PARKING);
                         }
-                    }
+                } else if (rule.getPrimary().equals(Rule.Primary.LOAD_GOODS)) {
+                    permittedSet.add(OutputFormat.LengthHeading.LOADING_ZONE.toString());
+                    addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.LOADING_ZONE);
+                } else if (rule.getPrimary().equals(Rule.Primary.LOAD_PASSENGERS)) {
+                    permittedSet.add(OutputFormat.LengthHeading.PASSENGER_LOADING_ZONE.toString());
+                    addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.PASSENGER_LOADING_ZONE);
                 }
             }
 
@@ -154,24 +159,22 @@ public class CoordParkingData {
             }
 
             String feePerHour = (minPricePerHour == maxPricePerHour) ? "" + minPricePerHour : minPricePerHour + "-" + maxPricePerHour;
-            /*if (minPricePerHour == maxPricePerHour || minPricePerHour == 0) {
-                feePerHour = "" + maxPricePerHour;
-            } else {
-                feePerHour = minPricePerHour + "-" + maxPricePerHour;
-            }*/
+
+            outputFormat.setMaxParkingDuration(maxParkingDuration);
             outputFormat.setFeePerHour(feePerHour);
             csvMap.put(curbId, outputFormat);
         }
 
-        System.out.println("\n\n" + csvMap.get("c2Y6MTQzODY"));
+        System.out.println("\n\nOUTPUT:\n" + csvMap.get("c2Y6MTQzODY")); //hardconding the name of single curb for now only
         /*CSVWriter csv = new CSVWriter("sample.csv");
         csv.getBufferedWriter().append(stringBuilder.toString());
         csv.getBufferedWriter().flush();
         csv.closeFile();*/
     }
 
+    //using file for testing only
     private static StringBuilder getDataFromFile() {
-        try (FileReader fileReader = new FileReader(new File("/home/abid/DEVELOPMENT/north/FILES/c2Y6MTQzODY.json")); BufferedReader rdr = new BufferedReader(fileReader)) {
+        try (FileReader fileReader = new FileReader(new File("test/input/beamville/c2Y6MTQzODY.json")); BufferedReader rdr = new BufferedReader(fileReader)) {
             StringBuilder result = new StringBuilder();
             String line = null;
 
@@ -183,6 +186,26 @@ public class CoordParkingData {
             System.err.println("ERROR:" + e);
             return null;
         }
+    }
+
+    private static StringBuilder getDataFromAPI() throws IOException {
+        StringBuilder result = new StringBuilder();
+        String latitude = "37.761479";
+        String longitude = "-122.448245";
+        String radius = "7.8";
+//        String duration = "1";
+        String accessKey = "Lnkj2-HUkevsvbTSYXA8Hg6FhtMFgeJJRYYMF_Fboio";
+        String api = "https://api.sandbox.coord.co/v1/search/curbs/bylocation/all_rules?latitude=" + latitude + "&longitude=" + longitude + "&radius_km=" + radius + "&access_key=" + accessKey;
+        String line;
+        URL url = new URL(api);
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        while ((line = rd.readLine()) != null) {
+            result.append(line);
+        }
+        rd.close();
+        return result;
     }
 
     private static void addLengthToMap(long length, OutputFormat outputFormat, OutputFormat.LengthHeading lengthHeading) {
