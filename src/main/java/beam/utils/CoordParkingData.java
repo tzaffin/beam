@@ -1,19 +1,10 @@
 package beam.utils;
 
-import akka.protobuf.ByteString;
-import beam.analysis.via.CSVWriter;
 import beam.utils.coordmodel.*;
-import com.csvreader.CsvReader;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.lang.StringUtils;
-import org.geotools.data.FeatureReader;
-import org.hsqldb.lib.StringUtil;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.util.*;
 
@@ -90,18 +81,21 @@ public class CoordParkingData {
 
             Set<String> permittedSet = new HashSet<>();
             for (Rule rule : feature.getProperties().getRules()) {
-                if (rule.getPrimary().equals(Rule.Primary.NONE)) {
-                    if (rule.getPermitted().isEmpty()) {
-                        permittedSet.add(OutputFormat.LengthHeading.NO_STOPPING.toString());
-                        addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.NO_STOPPING);
-                    } else {
-                        permittedSet.add(OutputFormat.LengthHeading.NO_PARKING.toString());
-                        addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.NO_PARKING);
-                    }
-                } else if (rule.getPrimary().equals(Rule.Primary.PARK)) {
-                    if (rule.getMaxDurationH() != null && maxParkingDuration < rule.getMaxDurationH()) {
-                        maxParkingDuration = rule.getMaxDurationH();
-                    }
+
+                switch (rule.getPrimary()) {
+                    case NONE:
+                        if (rule.getPermitted().isEmpty()) {
+                            permittedSet.add(OutputFormat.LengthHeading.NO_STOPPING.toString());
+                            addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.NO_STOPPING);
+                        } else {
+                            permittedSet.add(OutputFormat.LengthHeading.NO_PARKING.toString());
+                            addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.NO_PARKING);
+                        }
+                        break;
+                    case PARK:
+                        if (rule.getMaxDurationH() != null && maxParkingDuration < rule.getMaxDurationH()) {
+                            maxParkingDuration = rule.getMaxDurationH();
+                        }
                         List<Price> prices = rule.getPrice();
                         Double pricePerHour = prices.get(0).getPricePerHour().getAmount();
                         if (pricePerHour == null || pricePerHour == 0) {
@@ -118,12 +112,16 @@ public class CoordParkingData {
                             permittedSet.add(OutputFormat.LengthHeading.PAID_PARKING.toString());
                             addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.PAID_PARKING);
                         }
-                } else if (rule.getPrimary().equals(Rule.Primary.LOAD_GOODS)) {
-                    permittedSet.add(OutputFormat.LengthHeading.LOADING_ZONE.toString());
-                    addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.LOADING_ZONE);
-                } else if (rule.getPrimary().equals(Rule.Primary.LOAD_PASSENGERS)) {
-                    permittedSet.add(OutputFormat.LengthHeading.PASSENGER_LOADING_ZONE.toString());
-                    addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.PASSENGER_LOADING_ZONE);
+                        break;
+                    case LOAD_GOODS:
+                        permittedSet.add(OutputFormat.LengthHeading.LOADING_ZONE.toString());
+                        addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.LOADING_ZONE);
+                        break;
+                    case LOAD_PASSENGERS:
+                        permittedSet.add(OutputFormat.LengthHeading.PASSENGER_LOADING_ZONE.toString());
+                        addLengthToMap(curbLength, outputFormat, OutputFormat.LengthHeading.PASSENGER_LOADING_ZONE);
+                        break;
+
                 }
             }
 
@@ -165,7 +163,8 @@ public class CoordParkingData {
             csvMap.put(curbId, outputFormat);
         }
 
-        System.out.println("\n\nOUTPUT:\n" + csvMap.get("c2Y6MTQzODY")); //hardconding the name of single curb for now only
+        System.out.println("\n\nFIELDS:\n" + csvMap.get("c2Y6MTQzODY")); //hardconding the name of single curb for now only
+        System.out.println("\n\nCSV OUTPUT:\n" + csvMap.get("c2Y6MTQzODY").getCsvString()); //hardconding the name of single curb for now only
         /*CSVWriter csv = new CSVWriter("sample.csv");
         csv.getBufferedWriter().append(stringBuilder.toString());
         csv.getBufferedWriter().flush();

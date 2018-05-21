@@ -186,6 +186,23 @@ public class OutputFormat {
                 '}';
     }
 
+    public String getCsvString() {
+        return curbId +
+                "," + startLongitude +
+                "," + startLatitude +
+                "," + endLongitude +
+                "," + feePerHour +
+                "," + endLatitude +
+                "," + totalCurbLength +
+                "," + totalNoParkingLength +
+                "," + totalNoStoppingLength +
+                "," + totalFreeParkingLength +
+                "," + totalPaidParkingLength +
+                "," + totalLoadingZoneLength +
+                "," + totalPassengerLoadingZoneLength +
+                "," + maxParkingDuration;
+    }
+
     public enum LengthHeading {
 
         NO_STOPPING("No Stopping"),
