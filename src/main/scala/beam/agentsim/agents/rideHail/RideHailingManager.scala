@@ -11,7 +11,7 @@ import beam.agentsim.Resource._
 import beam.agentsim.ResourceManager.VehicleManager
 import beam.agentsim.agents.PersonAgent
 import beam.agentsim.agents.household.HouseholdActor.ReleaseVehicleReservation
-import beam.agentsim.agents.modalBehaviors.DrivesVehicle.StartLegTrigger
+import beam.agentsim.agents.modalBehaviors.DrivesVehicle.{StartLegTrigger, StopDriving}
 import beam.agentsim.agents.rideHail.RideHailingAgent._
 import beam.agentsim.agents.rideHail.RideHailingManager._
 import beam.agentsim.agents.vehicles.AccessErrorCodes.{CouldNotFindRouteToCustomer, RideHailVehicleTakenError, UnknownInquiryIdError, UnknownRideHailReservationError}
@@ -140,7 +140,9 @@ class RideHailingManager(val  beamServices: BeamServices, val scheduler: ActorRe
       import context.dispatcher
       if(availableKeyset.size > 1) {
         val idRnd1 = availableKeyset(0)
-        val idRnd2 = availableKeyset(2)
+        val idRnd2 = availableKeyset
+          .filterNot(_.equals(idRnd1))
+          .apply(rnd.nextInt(availableKeyset.size - 1))
 
        // print(idRnd1)
        // print(idRnd2)
@@ -182,20 +184,21 @@ class RideHailingManager(val  beamServices: BeamServices, val scheduler: ActorRe
 
               rideHailAgent ! Interrupt()
 
-              //rideHailAgent !  StopDriving()
+
+              //rideHailAgent ! StopDriving()
 
               rideHailAgent ! ModifyPassengerSchedule(passengerSchedule)
 
 
               rideHailAgent ! Resume()
-              repositionDoneOnce=true
+              //repositionDoneOnce=true
 
               //self ! RepositionResponse(rnd1, rnd2, rnd1Response, rnd2Response)
-              println("moved tnc")
-              println(rideHailAgent.path)
-              println(rnd1.vehicleId)
-              println(tick)
-              println(passengerSchedule)
+              //println("moved tnc")
+              //println(rideHailAgent.path)
+              //println(rnd1.vehicleId)
+              //println(tick)
+              //println(passengerSchedule)
             } else {
               sendoutAckMessageToSchedulerForRideHailAllocationmanagerTimeout()
               print("no tnc moved")
