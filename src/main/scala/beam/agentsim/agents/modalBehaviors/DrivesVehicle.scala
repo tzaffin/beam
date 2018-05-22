@@ -65,7 +65,7 @@ trait DrivesVehicle[T <: DrivingData] extends BeamAgent[T] with HasServices {
             beamServices.geo.wgs2Utm(currentLeg.travelPath.endPoint)))
       data.passengerSchedule.schedule(currentLeg).riders.foreach { pv =>
         beamServices.personRefs.get(pv.personId).foreach { personRef =>
-          logDebug(s"Scheduling NotifyLegEndTrigger for Person $personRef")
+          logInfo(s"Scheduling NotifyLegEndTrigger for Person $personRef")
           scheduler ! ScheduleTrigger(NotifyLegEndTrigger(tick, currentLeg),
                                       personRef)
         }
@@ -81,6 +81,7 @@ trait DrivesVehicle[T <: DrivingData] extends BeamAgent[T] with HasServices {
 
       if (data.currentLegPassengerScheduleIndex + 1 < data.passengerSchedule.schedule.size) {
         // TODO: Throw exception here, see why scheduler doesn't recover
+        logDebug(s"Going to waiting to drive => WaitingToDrive")
         val nextLeg = data.passengerSchedule.schedule.keys
           .drop(data.currentLegPassengerScheduleIndex + 1)
           .head
@@ -101,6 +102,8 @@ trait DrivesVehicle[T <: DrivingData] extends BeamAgent[T] with HasServices {
               ._1
               .travelPath
               .endPoint))
+        logDebug(
+          s"Sent PassengerScheduleEmptyMessage and moving to => PassengerScheduleEmpty")
         goto(PassengerScheduleEmpty) using data
           .withCurrentLegPassengerScheduleIndex(
             data.currentLegPassengerScheduleIndex + 1)

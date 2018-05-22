@@ -360,6 +360,7 @@ class PersonAgent(val scheduler: ActorRef,
     case Event(PassengerScheduleEmptyMessage(_), data: BasePersonData) =>
       val (tick, triggerId) = releaseTickAndTriggerId()
       if (data.restOfCurrentTrip.head.unbecomeDriverOnCompletion) {
+        logDebug(s"Released vehicle ${data.currentVehicle.head}")
         beamServices.vehicles(data.currentVehicle.head).unsetDriver()
         eventsManager.processEvent(
           new PersonLeavesVehicleEvent(tick,
@@ -412,32 +413,36 @@ class PersonAgent(val scheduler: ActorRef,
       scheduler ! CompletionNotice(
         triggerId,
         Vector(ScheduleTrigger(StartLegTrigger(tick, nextLeg.beamLeg), self)))
+      val newVehicle =
+        if (data.currentVehicle.isEmpty || data.currentVehicle.head != Id
+              .createVehicleId(nextLeg.beamVehicleId)) {
+          val vehicle =
+            beamServices.vehicles(Id.createVehicleId(nextLeg.beamVehicleId))
+          logInfo(s"Person Agent Going to be a driver for ${vehicle.id}")
+          vehicle
+            .becomeDriver(self)
+            .fold(
+              fa =>
+                throw new RuntimeException(
+                  s"I Person Agent ${self.path.toString} attempted to become driver of vehicle ${vehicle.id} but driver ${vehicle.driver.get} already assigned."),
+              fb => {
+                eventsManager.processEvent(
+                  new PersonEntersVehicleEvent(
+                    tick,
+                    Id.createPersonId(id),
+                    Id.createVehicleId(nextLeg.beamVehicleId)))
+              }
+            )
+          Id.createVehicleId(nextLeg.beamVehicleId) +: data.currentVehicle
+        } else {
+          data.currentVehicle
+        }
+      logInfo(
+        s"Current Vehicle to drive $newVehicle and vehicle ${Id.createVehicleId(nextLeg.beamVehicleId)}")
       goto(WaitingToDrive) using data.copy(
         passengerSchedule = PassengerSchedule().addLegs(Vector(nextLeg.beamLeg)),
         currentLegPassengerScheduleIndex = 0,
-        currentVehicle =
-          if (currentVehicle.isEmpty || currentVehicle.head != Id
-                .createVehicleId(nextLeg.beamVehicleId)) {
-            val vehicle =
-              beamServices.vehicles(Id.createVehicleId(nextLeg.beamVehicleId))
-            vehicle
-              .becomeDriver(self)
-              .fold(
-                fa =>
-                  throw new RuntimeException(
-                    s"I attempted to become driver of vehicle $id but driver ${vehicle.driver.get} already assigned."),
-                fb => {
-                  eventsManager.processEvent(
-                    new PersonEntersVehicleEvent(
-                      tick,
-                      Id.createPersonId(id),
-                      Id.createVehicleId(nextLeg.beamVehicleId)))
-                }
-              )
-            Id.createVehicleId(nextLeg.beamVehicleId) +: currentVehicle
-          } else {
-            currentVehicle
-          }
+        currentVehicle = newVehicle
       )
     case Event(
         StateTimeout,

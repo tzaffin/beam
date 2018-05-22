@@ -236,7 +236,7 @@ class BeamMobsim @Inject()(
     override def receive = {
 
       case CompletionNotice(_, _) =>
-        log.debug("Scheduler is finished.")
+        log.info("Scheduler is finished.")
         cleanupRideHailingAgents()
         cleanupVehicle()
         population ! Finish
@@ -252,6 +252,7 @@ class BeamMobsim @Inject()(
 
       case Terminated(_) =>
         if (context.children.isEmpty) {
+          log.info("Completed BEAM Mobsim")
           context.stop(self)
           runSender ! Success("Ran.")
         } else {
@@ -268,7 +269,7 @@ class BeamMobsim @Inject()(
       val timerTrigger = RepositioningTimer(0.0)
       val timerMessage = ScheduleTrigger(timerTrigger, rideHailingManager)
       scheduler ! timerMessage
-      log.info(s"rideHailManagerTimerScheduled")
+      log.info(s"${scheduler.path.toString} rideHailManagerTimerScheduled")
     }
 
     private def cleanupRideHailingAgents(): Unit = {

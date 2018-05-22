@@ -76,7 +76,7 @@ public class PhyssimCalcLinkStats {
     public void notifyIterationEnds(int iteration, TravelTimeCalculator travelTimeCalculator) {
 
         linkStats.addData(volumes, travelTimeCalculator.getLinkTravelTimes());
-        processData(iteration, travelTimeCalculator);
+        processData(iteration, travelTimeCalculator.getLinkTravelTimes());
         CategoryDataset dataset = buildAndGetGraphCategoryDataset();
         if(this.controlerIO != null) {
             if(isNotTestMode() && writeLinkstats(iteration)) {
@@ -99,10 +99,7 @@ public class PhyssimCalcLinkStats {
         return interval == 1 || (interval > 0 && iterationNumber % interval == 0);
     }
 
-    private void processData(int iteration, TravelTimeCalculator travelTimeCalculator) {
-
-
-        TravelTime travelTime = travelTimeCalculator.getLinkTravelTimes();
+    private void processData(int iteration, TravelTime travelTime) {
 
         for(int idx = 0; idx < noOfBins; idx++) {
 

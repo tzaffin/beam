@@ -119,13 +119,14 @@ class TransitDriverAgent(val scheduler: ActorRef,
   when(Uninitialized) {
     case Event(InitTransitDrive(transitVehId, vehicle, legs),
                _ @EmptyDriverData) =>
-      logDebug(s" $id has been created, updating data")
+      logInfo(s" $id has been created $scheduler, updating data")
       beamServices.vehicles += (transitVehId -> vehicle)
-      stay() using TransitDriverData(vehicle, legs) replying TransitInitiated(
-        self)
+      stay() using TransitDriverData(vehicle, legs) replying Some(
+        TransitInitiated(self))
     case Event(TriggerWithId(InitializeTrigger(tick), triggerId),
                data: TransitDriverData) =>
       logInfo(s" $id has been initialized, going to Waiting state")
+      logInfo(s"TransitDriverAgent Going to be a driver for ${data.vehicle.id}")
       data.vehicle
         .becomeDriver(self)
         .fold(
@@ -171,6 +172,8 @@ class TransitDriverAgent(val scheduler: ActorRef,
   }
 
   val myUnhandled: StateFunction = {
+    case Event(InitTransitDrive(_, _, _), _) =>
+      stay() replying None
     case Event(IllegalTriggerGoToError(reason), _) =>
       context.parent ! Passivate(stopMessage = Failure(reason))
       stay
@@ -178,8 +181,10 @@ class TransitDriverAgent(val scheduler: ActorRef,
       context.parent ! Passivate(stopMessage = Stop)
       stay
     case Event(Stop, _) =>
+      logInfo(s" $id has been stopped")
       stop
     case Event(Failure(reason), _) =>
+      logInfo(s" $id has been stopped with reason $reason")
       stop(Failure(reason))
   }
 

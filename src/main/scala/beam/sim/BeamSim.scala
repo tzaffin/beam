@@ -94,20 +94,22 @@ class BeamSim @Inject()(private val actorSystem: ActorSystem,
     if (Cluster(actorSystem).selfRoles.contains("worker")) {
       actorSystem.actorOf(
         BeamRouter
-          .props(beamServices,
-                 transportNetwork,
-                 scenario.getNetwork,
-                 eventsManager,
-                 scenario.getTransitVehicles,
-                 fareCalculator,
-                 tollCalculator)
+          .props(
+            beamServices,
+            transportNetwork,
+            scenario.getNetwork,
+            eventsManager,
+            scenario.getTransitVehicles,
+            scenario.getConfig.travelTimeCalculator,
+            fareCalculator,
+            tollCalculator
+          )
           .withDispatcher("akka.actor.route-pinned-dispatcher"),
         "router"
       )
     } else if (Cluster(actorSystem).getSelfRoles.contains("base")) {
       beamServices.beamRouter =
         actorSystem.actorOf(FromConfig.props(Props.empty), name = "beamRouter")
-      Await.result(beamServices.beamRouter ? Identify(0), timeout.duration)
     }
 
     /*    if(null != beamServices.beamConfig.beam.agentsim.taz.file && !beamServices.beamConfig.beam.agentsim.taz.file.isEmpty)

@@ -36,17 +36,21 @@ import com.conveyal.r5.transit.{RouteInfo, TransitLayer, TransportNetwork}
 import org.matsim.api.core.v01.network.Network
 import org.matsim.api.core.v01.{Coord, Id}
 import org.matsim.core.api.experimental.events.EventsManager
+import org.matsim.core.config.groups.TravelTimeCalculatorConfigGroup
 import org.matsim.core.router.util.TravelTime
+import org.matsim.core.trafficmonitoring.TravelTimeCalculator
 import org.matsim.vehicles.{Vehicle, VehicleType, VehicleUtils, Vehicles}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.concurrent.Future
 
 class BeamRouter(services: BeamServices,
                  transportNetwork: TransportNetwork,
                  network: Network,
                  eventsManager: EventsManager,
                  transitVehicles: Vehicles,
+                 travelTimeConfig: TravelTimeCalculatorConfigGroup,
                  fareCalculator: FareCalculator,
                  tollCalculator: TollCalculator)
     extends Actor
@@ -70,15 +74,20 @@ class BeamRouter(services: BeamServices,
         .withDispatcher("akka.actor.route-thread-pool-dispatcher")),
     "router-worker"
   )
+  private val travelTimeCalculator =
+    new TravelTimeCalculator(network, travelTimeConfig)
   private var numStopsNotFound = 0
 
   override def receive = {
     case InitTransit(scheduler) =>
-      val transitSchedule = initTransit(scheduler)
-      routerWorker ! Broadcast(TransitInited(transitSchedule))
-      sender ! Success("success")
-    case u @ UpdateTravelTime(_) =>
-      routerWorker ! Broadcast(u)
+      val snd = sender()
+      initTransit(scheduler).foreach { tr =>
+        routerWorker ! Broadcast(TransitInited(tr))
+        snd ! Success("success")
+      }
+    case TravelTimeUpdate() =>
+      routerWorker ! Broadcast(
+        UpdateTravelTime(travelTimeCalculator.getLinkTravelTimes))
     case msg =>
       routerWorker.forward(msg)
   }
@@ -103,9 +112,10 @@ class BeamRouter(services: BeamServices,
         extractShardId = TransitDriverAgent.extractShardId
       )
 
-    def createTransitVehicle(transitVehId: Id[Vehicle],
-                             route: RouteInfo,
-                             legs: Seq[BeamLeg]): Unit = {
+    def createTransitVehicle(
+        transitVehId: Id[Vehicle],
+        route: RouteInfo,
+        legs: Seq[BeamLeg]): Future[Option[TransitInitiated]] = {
 
       val mode =
         Modes.mapTransitMode(TransitLayer.getTransitModes(route.route_type))
@@ -141,16 +151,17 @@ class BeamRouter(services: BeamServices,
             matSimTransitVehicle,
             None,
             TransitVehicle)
-          log.info(s"Added $transitVehId -> $vehicle")
           //services.vehicles += (transitVehId -> vehicle)
           (transitDriveAgent ? TransitDataEnvelope(
             transitVehId,
             InitTransitDrive(transitVehId, vehicle, legs)))
-            .mapTo[TransitInitiated]
-            .foreach(t =>
-              scheduler ! ScheduleTrigger(InitializeTrigger(0.0), t.ref))
+            .mapTo[Option[TransitInitiated]]
+        /*.foreach(t =>
+              scheduler ! ScheduleTrigger(InitializeTrigger(0.0), t.ref))*/
         case _ =>
           log.error(mode + " is not supported yet")
+          Future.failed(
+            new IllegalArgumentException(mode + " is not supported yet"))
       }
     }
 
@@ -271,12 +282,19 @@ class BeamRouter(services: BeamServices,
         }
     }
     val transitScheduleToCreate = transitData.toMap
-    transitScheduleToCreate.foreach {
-      case (tripVehId, (route, legs)) =>
-        createTransitVehicle(tripVehId, route, legs)
-    }
-    log.info(s"Finished Transit initialization trips, ${transitData.length}")
-    transitScheduleToCreate
+    Future
+      .sequence(transitScheduleToCreate.map {
+        case (tripVehId, (route, legs)) =>
+          createTransitVehicle(tripVehId, route, legs)
+      })
+      .map { t =>
+        t.collect({ case Some(ref) => ref })
+          .foreach(i =>
+            scheduler ! ScheduleTrigger(InitializeTrigger(0.0), i.ref))
+        log.info(
+          s"Finished Transit initialization trips, ${transitData.length}")
+        transitScheduleToCreate
+      }
   }
 
   /**
@@ -411,6 +429,7 @@ object BeamRouter {
 
   case class EmbodyWithCurrentTravelTime(leg: BeamLeg, vehicleId: Id[Vehicle])
 
+  case class TravelTimeUpdate()
   case class UpdateTravelTime(travelTime: TravelTime)
 
   /**
@@ -442,6 +461,7 @@ object BeamRouter {
             network: Network,
             eventsManager: EventsManager,
             transitVehicles: Vehicles,
+            travelTimeConfig: TravelTimeCalculatorConfigGroup,
             fareCalculator: FareCalculator,
             tollCalculator: TollCalculator) =
     Props(
@@ -450,6 +470,7 @@ object BeamRouter {
                      network,
                      eventsManager,
                      transitVehicles,
+                     travelTimeConfig,
                      fareCalculator,
                      tollCalculator))
 }

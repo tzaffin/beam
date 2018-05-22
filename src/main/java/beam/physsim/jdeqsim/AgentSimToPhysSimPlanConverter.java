@@ -1,6 +1,7 @@
 package beam.physsim.jdeqsim;
 
 import akka.actor.ActorRef;
+import akka.routing.Broadcast;
 import beam.agentsim.events.PathTraversalEvent;
 import beam.analysis.physsim.PhyssimCalcLinkStats;
 import beam.analysis.via.EventWriterXML_viaCompatible;
@@ -145,7 +146,7 @@ public class AgentSimToPhysSimPlanConverter implements BasicEventHandler, Metric
             eventsWriterXML.closeFile();
         }
 
-        router.tell(new BeamRouter.UpdateTravelTime(travelTimeCalculator.getLinkTravelTimes()), ActorRef.noSender());
+        router.tell(new Broadcast(new BeamRouter.TravelTimeUpdate()), ActorRef.noSender());
     }
 
     private boolean writePhysSimEvents(int iterationNumber) {
