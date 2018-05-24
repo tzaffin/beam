@@ -122,7 +122,7 @@ class R5RoutingWorker_v2(val typesafeConfig: Config) extends Actor with ActorLog
     1
   }
   else {
-    Runtime.getRuntime().availableProcessors() - 2
+    8 // Runtime.getRuntime().availableProcessors() - 2
   }
 
   implicit val executionContext: ExecutionContext = ExecutionContext.fromExecutorService(
