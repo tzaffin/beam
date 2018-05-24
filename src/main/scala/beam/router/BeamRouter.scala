@@ -130,8 +130,10 @@ class BeamRouter(services: BeamServices, transportNetwork: TransportNetwork, net
 
     case resp: BatchRoutingResponses =>
       resp.responses.foreach { resp =>
-        val actorRef = map(resp.requestId)
-        actorRef ! resp
+        map.get(resp.requestId) match {
+          case Some(actorRef) =>  actorRef ! resp
+          case None => log.warning("Can't forward RoutingResponses[{}]", resp.requestId)
+        }
       }
 
     case other =>
