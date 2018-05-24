@@ -136,7 +136,7 @@ class BeamRouter(services: BeamServices, transportNetwork: TransportNetwork, net
         }
       }
 
-    case other =>
+    case other if nodes.size >= 1 =>
       val address = nodes.toIndexedSeq(ThreadLocalRandom.current.nextInt(nodes.size))
       val service = context.actorSelection(RootActorPath(address) / servicePathElements)
       //log.debug("Sending other `{}` to {}", other, service)
