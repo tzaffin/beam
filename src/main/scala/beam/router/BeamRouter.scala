@@ -43,7 +43,7 @@ import scala.concurrent.duration._
 import akka.pattern._
 
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
 class BeamRouter(services: BeamServices, transportNetwork: TransportNetwork, network: Network, eventsManager: EventsManager, transitVehicles: Vehicles, fareCalculator: FareCalculator, tollCalculator: TollCalculator) extends Actor with Stash with ActorLogging {
   // TODO Fix me!
@@ -64,7 +64,7 @@ class BeamRouter(services: BeamServices, transportNetwork: TransportNetwork, net
   private var numStopsNotFound = 0
 
   var nodes = Set.empty[Address]
-  implicit val ex = context.system.dispatcher
+  implicit val ex: ExecutionContext = context.dispatcher
 
 
   log.info(s"BeamRouter: ${self.path}")

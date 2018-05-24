@@ -35,7 +35,7 @@ class Population(val scenario: Scenario, val beamServices: BeamServices, val sch
   }
   private implicit val timeout = Timeout(50000, TimeUnit.SECONDS)
 
-  import context.dispatcher
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   private var personToHouseholdId: Map[Id[Person], Id[Household]] = Map()
   scenario.getHouseholds.getHouseholds.forEach { (householdId, matSimHousehold) =>

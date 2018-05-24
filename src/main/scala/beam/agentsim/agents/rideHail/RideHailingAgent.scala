@@ -20,6 +20,8 @@ import org.matsim.api.core.v01.events.{PersonDepartureEvent, PersonEntersVehicle
 import org.matsim.api.core.v01.{Coord, Id}
 import org.matsim.core.api.experimental.events.EventsManager
 
+import scala.concurrent.ExecutionContext
+
 object RideHailingAgent {
   val idPrefix: String = "rideHailingAgent"
 
@@ -66,7 +68,7 @@ class RideHailingAgent(override val id: Id[RideHailingAgent], val scheduler: Act
       vehicle.becomeDriver(self).fold(fa =>
         stop(Failure(s"RideHailingAgent $self attempted to become driver of vehicle ${vehicle.id} " +
           s"but driver ${vehicle.driver.get} already assigned.")), fb => {
-        vehicle.checkInResource(Some(SpaceTime(initialLocation,tick.toLong)),context.dispatcher)
+        vehicle.checkInResource(Some(SpaceTime(initialLocation,tick.toLong)), getExecutionContext)
         eventsManager.processEvent(new PersonDepartureEvent(tick, Id.createPersonId(id), null, "be_a_tnc_driver"))
         eventsManager.processEvent(new PersonEntersVehicleEvent(tick, Id.createPersonId(id), vehicle.id))
         goto(Idle) replying CompletionNotice(triggerId) using data.copy(currentVehicle = Vector(vehicle.id))
@@ -91,14 +93,14 @@ class RideHailingAgent(override val id: Id[RideHailingAgent], val scheduler: Act
   when(PassengerScheduleEmpty) {
     case Event(PassengerScheduleEmptyMessage(lastVisited), data) =>
       val (tick, triggerId) = releaseTickAndTriggerId()
-      vehicle.checkInResource(Some(lastVisited),context.dispatcher)
+      vehicle.checkInResource(Some(lastVisited), getExecutionContext)
       scheduler ! CompletionNotice(triggerId)
       goto(Idle) using data.withPassengerSchedule(PassengerSchedule()).withCurrentLegPassengerScheduleIndex(0).asInstanceOf[RideHailingAgentData]
   }
 
   when(PassengerScheduleEmptyInterrupted) {
     case Event(PassengerScheduleEmptyMessage(lastVisited), data) =>
-      vehicle.checkInResource(Some(lastVisited),context.dispatcher)
+      vehicle.checkInResource(Some(lastVisited), getExecutionContext)
       goto(IdleInterrupted) using data.withPassengerSchedule(PassengerSchedule()).withCurrentLegPassengerScheduleIndex(0).asInstanceOf[RideHailingAgentData]
   }
 
@@ -120,6 +122,8 @@ class RideHailingAgent(override val id: Id[RideHailingAgent], val scheduler: Act
     case _ -> _ =>
       unstashAll()
   }
+
+  def getExecutionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
 }
 

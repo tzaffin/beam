@@ -130,7 +130,7 @@ class RideHailingManager(val  beamServices: BeamServices, val scheduler: ActorRe
       val rnd = new Random
       val availableKeyset = availableRideHailVehicles.keySet.toArray
       implicit val timeout: Timeout = Timeout(50000, TimeUnit.SECONDS)
-      import context.dispatcher
+      import scala.concurrent.ExecutionContext.Implicits.global
       if(availableKeyset.size > 1) {
         val idRnd1 = availableKeyset.apply(rnd.nextInt(availableKeyset.size))
         val idRnd2 = availableKeyset
@@ -194,7 +194,7 @@ class RideHailingManager(val  beamServices: BeamServices, val scheduler: ActorRe
           lockedVehicles += rideHailingLocation.vehicleId
 
           // Need to have this dispatcher here for the future execution below
-          import context.dispatcher
+          import scala.concurrent.ExecutionContext.Implicits.global
 
           val (futureRideHailingAgent2CustomerResponse, futureRideHailing2DestinationResponse) =
             createCustomerInquiryResponse(personId, customerPickUp, departAt, destination, rideHailingLocation)
