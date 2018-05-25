@@ -1,8 +1,7 @@
 package beam.utils.coordmodel;
 
-import sun.security.util.Length;
-
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Includes the columns for CSV
@@ -14,20 +13,20 @@ public class OutputFormat {
     private String startLongitude;
     private String startLatitude;
     private String endLongitude;
-    private String feePerHour;
     private String endLatitude;
-    private long totalCurbLength;
-    private long totalNoParkingLength;
-    private long totalNoStoppingLength;
-    private long totalFreeParkingLength;
-    private long totalPaidParkingLength;
-    private long totalLoadingZoneLength;
-    private long totalPassengerLoadingZoneLength;
-    private double maxParkingDuration;
-
-    private OutputFormat.LengthHeading lengthHeading;
-    //    private Map<Integer, EnumMap<Permitted, String>> mapDayData;
-    private Map<LengthHeading, Long> permittedTypeLengthMap;
+    private String segmentId;
+    private Integer ruleNumber;
+    private String segmentLength;
+    private String primaryRule;
+    private String days;
+    private String startTime;
+    private String endTime;
+    private String feePerHour;
+    private String permittedVehicle;
+    private String otherVehiclesPermitted;
+    private String maxDuration;
+    private String vehicleType;
+    private String parkingType;
 
     public String getCurbId() {
         return curbId;
@@ -35,10 +34,6 @@ public class OutputFormat {
 
     public void setCurbId(String curbId) {
         this.curbId = curbId;
-    }
-
-    public OutputFormat() {
-        permittedTypeLengthMap = new EnumMap<LengthHeading, Long>(LengthHeading.class);
     }
 
     public String getStartLongitude() {
@@ -65,14 +60,6 @@ public class OutputFormat {
         this.endLongitude = endLongitude;
     }
 
-    public String getFeePerHour() {
-        return feePerHour;
-    }
-
-    public void setFeePerHour(String feePerHour) {
-        this.feePerHour = feePerHour;
-    }
-
     public String getEndLatitude() {
         return endLatitude;
     }
@@ -81,126 +68,186 @@ public class OutputFormat {
         this.endLatitude = endLatitude;
     }
 
-    public double getTotalCurbLength() {
-        return totalCurbLength;
+    /**
+     * This is the unique identifier for each segment inside a curb
+     *
+     * @return segmentId
+     */
+    public String getSegmentId() {
+        return segmentId;
     }
 
-    public void setTotalCurbLength(long totalCurbLength) {
-        this.totalCurbLength = totalCurbLength;
+    /**
+     * Sets the unique identifier for each segment inside a curb. Better way is to concatenate the curbId with segment number
+     */
+    public void setSegmentId(String segmentId) {
+        this.segmentId = segmentId;
     }
 
-    public double getTotalNoParkingLength() {
-        return totalNoParkingLength;
+    /**
+     * Serial number for any rule inside a curb segment
+     *
+     * @return number of rule
+     */
+    public Integer getRuleNumber() {
+        return ruleNumber;
     }
 
-    public void setTotalNoParkingLength(long totalNoParkingLength) {
-        this.totalNoParkingLength = totalNoParkingLength;
+    public void setRuleNumber(Integer ruleNumber) {
+        this.ruleNumber = ruleNumber;
     }
 
-    public double getTotalNoStoppingLength() {
-        return totalNoStoppingLength;
+    /**
+     * Length of segment inside the curb.
+     *
+     * @return length of segment (meters)
+     */
+    public String getSegmentLength() {
+        return segmentLength;
     }
 
-    public void setTotalNoStoppingLength(long totalNoStoppingLength) {
-        this.totalNoStoppingLength = totalNoStoppingLength;
+    /**
+     * length of segment inside the curb
+     *
+     * @param segmentLength length of segment (meters)
+     */
+    public void setSegmentLength(String segmentLength) {
+        this.segmentLength = segmentLength;
     }
 
-    public long getTotalFreeParkingLength() {
-        return totalFreeParkingLength;
+    public String getPrimaryRule() {
+        return primaryRule;
     }
 
-    public void setTotalFreeParkingLength(long totalFreeParkingLength) {
-        this.totalFreeParkingLength = totalFreeParkingLength;
+    public void setPrimaryRule(String primaryRule) {
+        this.primaryRule = primaryRule;
     }
 
-    public double getTotalPaidParkingLength() {
-        return totalPaidParkingLength;
+    public String getDays() {
+        return days;
     }
 
-    public void setTotalPaidParkingLength(long totalPaidParkingLength) {
-        this.totalPaidParkingLength = totalPaidParkingLength;
+    public void setDays(String days) {
+        this.days = days;
     }
 
-    public long getTotalLoadingZoneLength() {
-        return totalLoadingZoneLength;
+    public String getStartTime() {
+        return startTime;
     }
 
-    public void setTotalLoadingZoneLength(long totalLoadingZoneLength) {
-        this.totalLoadingZoneLength = totalLoadingZoneLength;
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
     }
 
-    public long getTotalPassengerLoadingZoneLength() {
-        return totalPassengerLoadingZoneLength;
+    public String getEndTime() {
+        return endTime;
     }
 
-    public void setTotalPassengerLoadingZoneLength(long totalPassengerLoadingZoneLength) {
-        this.totalPassengerLoadingZoneLength = totalPassengerLoadingZoneLength;
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
     }
 
-    public double getMaxParkingDuration() {
-        return maxParkingDuration;
+    public String getFeePerHour() {
+        return feePerHour;
     }
 
-    public void setMaxParkingDuration(double maxParkingDuration) {
-        this.maxParkingDuration = maxParkingDuration;
+    public void setFeePerHour(String feePerHour) {
+        this.feePerHour = feePerHour;
     }
 
-//    public EnumMap<Permitted, String> getDayData(Integer day) {
-//        return mapDayData.get(day);
-//    }
-
-//    public void setDaydata(Integer dayNum, EnumMap<Permitted, String> val) {
-//        this.mapDayData.put(dayNum, val);
-//    }
-
-    public Map<LengthHeading, Long> getPermittedTypeLengthMap() {
-        return this.permittedTypeLengthMap;
+    public String getPermittedVehicle() {
+        return permittedVehicle;
     }
 
-
-    public OutputFormat.LengthHeading getLengthHeading() {
-        return this.lengthHeading;
+    public void setPermittedVehicle(String permittedVehicle) {
+        this.permittedVehicle = permittedVehicle;
     }
 
-    public void setLengthHeading(OutputFormat.LengthHeading lengthHeading) {
-        this.lengthHeading = lengthHeading;
+    public String getOtherVehiclesPermitted() {
+        return otherVehiclesPermitted;
+    }
+
+    public void setOtherVehiclesPermitted(String otherVehiclesPermitted) {
+        this.otherVehiclesPermitted = otherVehiclesPermitted;
+    }
+
+    /**
+     * Maximum duration of any rule
+     *
+     * @return duration (hours)
+     */
+    public String getMaxDuration() {
+        return maxDuration;
+    }
+
+    /**
+     * Set the maximum duration of any rule
+     *
+     * @param maxDuration duration (hours)
+     */
+    public void setMaxDuration(String maxDuration) {
+        this.maxDuration = maxDuration;
+    }
+
+    public String getVehicleType() {
+        return vehicleType;
+    }
+
+    public void setVehicleType(String vehicleType) {
+        this.vehicleType = vehicleType;
+    }
+
+    public String getParkingType() {
+        return parkingType;
+    }
+
+    public void setParkingType(String parkingType) {
+        this.parkingType = parkingType;
     }
 
     @Override
     public String toString() {
-        return "OutputFormat{" +
-                "curbId=" + curbId +
-                ", startLongitude=" + startLongitude +
-                ", startLatitude=" + startLatitude +
-                ", endLongitude=" + endLongitude +
-                ", feePerHour=" + feePerHour +
-                ", endLatitude=" + endLatitude +
-                ", totalCurbLength=" + totalCurbLength +
-                ", totalNoParkingLength=" + totalNoParkingLength +
-                ", totalNoStoppingLength=" + totalNoStoppingLength +
-                ", totalFreeParkingLength=" + totalFreeParkingLength +
-                ", totalPaidParkingLength=" + totalPaidParkingLength +
-                ", totalLoadingZoneLength=" + totalLoadingZoneLength +
-                ", totalPassengerLoadingZoneLength=" + totalPassengerLoadingZoneLength +
-                ", maxParkingDuration=" + maxParkingDuration +
+        return "{" +
+                "curbId='" + curbId + '\'' +
+                ", startLongitude='" + startLongitude + '\'' +
+                ", startLatitude='" + startLatitude + '\'' +
+                ", endLongitude='" + endLongitude + '\'' +
+                ", endLatitude='" + endLatitude + '\'' +
+                ", segmentId='" + segmentId + '\'' +
+                ", ruleNumber=" + ruleNumber +
+                ", segmentLength='" + segmentLength + '\'' +
+                ", primaryRule='" + primaryRule + '\'' +
+                ", days='" + days + '\'' +
+                ", startTime='" + startTime + '\'' +
+                ", endTime='" + endTime + '\'' +
+                ", feePerHour='" + feePerHour + '\'' +
+                ", permittedVehicle='" + permittedVehicle + '\'' +
+                ", otherVehiclesPermitted='" + otherVehiclesPermitted + '\'' +
+                ", maxDuration='" + maxDuration + '\'' +
+                ", vehicleType='" + vehicleType + '\'' +
+                ", parkingType='" + parkingType + '\'' +
                 '}';
     }
 
-    public String getCsvString() {
+    public String printValues() {
         return curbId +
                 "," + startLongitude +
                 "," + startLatitude +
                 "," + endLongitude +
-                "," + feePerHour +
                 "," + endLatitude +
-                "," + totalCurbLength +
-                "," + totalNoParkingLength +
-                "," + totalNoStoppingLength +
-                "," + totalFreeParkingLength +
-                "," + totalPaidParkingLength +
-                "," + totalLoadingZoneLength +
-                "," + totalPassengerLoadingZoneLength +
-                "," + maxParkingDuration;
+                "," + segmentId +
+                "," + ruleNumber +
+                "," + segmentLength +
+                "," + primaryRule +
+                "," + days +
+                "," + startTime +
+                "," + endTime +
+                "," + feePerHour +
+                "," + permittedVehicle +
+                "," + otherVehiclesPermitted +
+                "," + maxDuration +
+                "," + vehicleType +
+                "," + parkingType;
     }
 
     public enum LengthHeading {
@@ -212,7 +259,7 @@ public class OutputFormat {
         PAID_PARKING("Paid Parking"),
         FREE_PARKING("Free Parking");
         private final String value;
-        private static final Map<String, OutputFormat.LengthHeading> CONSTANTS = new HashMap<>();
+        private static final Map<String, LengthHeading> CONSTANTS = new HashMap<>();
 
         static {
             for (OutputFormat.LengthHeading c : values()) {
