@@ -32,11 +32,11 @@ public class AddTAZIdToParkingData {
             // args[8] is urbansim data with appended offstreet parking
             addOffStreetParkingData(args[7], args[6], args[8]);
             // args[9] is urbanSim data without shape area
-            removeAColumn(3, args[8], args[9]); 
+            removeAColumn(3, args[8], args[9]);
 
             System.out.println("Final output file written");
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            e.printStackTrace(); 
         }
 
 
