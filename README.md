@@ -1,8 +1,6 @@
 # BEAM
 
 
-
-
 [![Build Status](https://beam-ci.tk/job/master/badge/icon)](https://beam-ci.tk/job/master/)
 [![Documentation Status](https://readthedocs.org/projects/beam/badge/?version=latest)](http://beam.readthedocs.io/en/latest/?badge=latest)
 
