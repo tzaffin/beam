@@ -11,5 +11,4 @@ node {
     sh "./gradlew assemble"
   }
   
-  archive 'build/**'
 }
