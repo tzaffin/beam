@@ -4,6 +4,9 @@ pipeline {
     
     stages {
         stage('build') {
+        	when {
+        		branch 'master'
+        	}
             steps {
             	checkout scm
                 sh './gradlew clean assemble'
