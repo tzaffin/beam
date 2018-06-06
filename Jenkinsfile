@@ -11,7 +11,7 @@ pipeline {
         branch 'master'
       }
       steps {
-        checkout scm
+        checkout(scm: scm, poll: true, changelog: true)
         sh './gradlew clean assemble'
       }
     }
