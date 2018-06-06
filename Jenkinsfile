@@ -15,9 +15,8 @@ pipeline {
     }
 	
 	post { 
-        always { 
-            //publish result to glip
-            //run the script
+         always { 
+            echo 'TODO: run publish script to Glip'
         }
     }
 
