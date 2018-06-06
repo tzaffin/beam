@@ -1,4 +1,4 @@
-node {
+node('ec2') {
   properties([
     [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']]
   ])
