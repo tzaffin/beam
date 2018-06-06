@@ -1,11 +1,11 @@
 pipeline {
   agent {
-  	label 'ec2'
+  	label 'jenkins-slave'
   }
   stages {
     stage('build') {
       steps {
-        sh './gradlew build'
+        sh './gradlew assemble'
       }
     }
   }
