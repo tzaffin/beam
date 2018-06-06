@@ -1,14 +1,16 @@
-node('ec2') {
-  properties([
-    [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']]
-  ])
-  
-  stage('Checkout') {
-    checkout scm
-  }
-  
-  stage('Gradle Build') {
-    sh "./gradlew assemble"
-  }
-  
+pipeline {
+    agent any
+    stages {
+        stage('build') {
+            steps {
+                sh './gradlew clean assemble'
+            }
+        }
+    }
+    post {
+        success {
+        }
+        failure {
+        }
+    }
 }
