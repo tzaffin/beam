@@ -14,6 +14,7 @@ pipeline {
 	post { 
         always { 
             //publish result to glip
+            //run the script
         }
     }
 }
