@@ -1,10 +1,15 @@
-pipeline {
-  agent any
-  stages {
-    stage('build') {
-      steps {
-        sh './gradlew build'
-      }
-    }
+node {
+  properties([
+    [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']]
+  ])
+  
+  stage('Checkout') {
+    checkout scm
   }
+  
+  stage('Gradle Build') {
+    sh "./gradlew assemble"
+  }
+  
+  archive 'build/**'
 }
